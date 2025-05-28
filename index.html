@@ -1,12 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dagens hjemmekamper</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f2f5;
+      color: #333;
+    }
+
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 16px;
+      text-align: center;
+      font-size: 1.5em;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .table-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #f7f7f7;
+      color: #333;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    p {
+      font-style: italic;
+      color: #777;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        font-size: 1.3em;
+        padding: 12px;
+      }
+
+      .content {
+        padding: 12px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+        font-size: 0.95em;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Dagens hjemmekamper!</h1>
-  <div id="output">Loading...</div>
+  <header>Dagens hjemmekamper!</header>
+  <div class="content">
+    <div id="output">Loading...</div>
+  </div>
 
   <script>
     const targetUrl = 'https://www.fotball.no/fotballdata/klubb/kamper/?fiksId=557';
@@ -27,7 +107,7 @@
           const headers = Array.from(clonedTable.querySelectorAll('thead th')).map(th => th.textContent.trim().toLowerCase());
           const hjemmelagIndex = headers.findIndex(h => h.includes('hjemmelag'));
 
-          if (hjemmelagIndex === -1) return; // Skip if no "Hjemmelag" column
+          if (hjemmelagIndex === -1) return;
 
           const rows = clonedTable.querySelectorAll('tbody tr');
           rows.forEach(row => {
@@ -35,21 +115,32 @@
             const hjemmelagCell = cells[hjemmelagIndex];
             if (!hjemmelagCell || !hjemmelagCell.textContent.toLowerCase().includes('herkules')) {
               row.remove();
+            } else {
+              cells.forEach(cell => {
+                const links = cell.querySelectorAll('a');
+                links.forEach(link => {
+                  const text = document.createTextNode(link.textContent);
+                  link.replaceWith(text);
+                });
+              });
             }
           });
 
           if (clonedTable.querySelectorAll('tbody tr').length > 0) {
-            output.appendChild(clonedTable);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-card';
+            wrapper.appendChild(clonedTable);
+            output.appendChild(wrapper);
           }
         });
 
         if (output.innerHTML.trim() === '') {
-          output.innerHTML = '<p>Ingen hjemmekamper idag!.</p>';
+          output.innerHTML = '<p>Ingen hjemmekamper for Herkules funnet i dag.</p>';
         }
       })
       .catch(error => {
         console.error('Error scraping table:', error);
-        document.getElementById('output').innerHTML = '<p>Error loading data.</p>';
+        document.getElementById('output').innerHTML = '<p>Feil ved lasting av data.</p>';
       });
   </script>
 </body>
