@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dagens hjemmekamper</title>
+</head>
+<body>
+  <h1>Dagens hjemmekamper!</h1>
+  <div id="output">Loading...</div>
+
+  <script>
+    const targetUrl = 'https://www.fotball.no/fotballdata/klubb/kamper/?fiksId=557';
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+    fetch(proxyUrl)
+      .then(response => response.json())
+      .then(data => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        const tables = doc.querySelectorAll('table');
+        const output = document.getElementById('output');
+        output.innerHTML = '';
+
+        tables.forEach(table => {
+          const clonedTable = table.cloneNode(true);
+          const headers = Array.from(clonedTable.querySelectorAll('thead th')).map(th => th.textContent.trim().toLowerCase());
+          const hjemmelagIndex = headers.findIndex(h => h.includes('hjemmelag'));
+
+          if (hjemmelagIndex === -1) return; // Skip if no "Hjemmelag" column
+
+          const rows = clonedTable.querySelectorAll('tbody tr');
+          rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const hjemmelagCell = cells[hjemmelagIndex];
+            if (!hjemmelagCell || !hjemmelagCell.textContent.toLowerCase().includes('herkules')) {
+              row.remove();
+            }
+          });
+
+          if (clonedTable.querySelectorAll('tbody tr').length > 0) {
+            output.appendChild(clonedTable);
+          }
+        });
+
+        if (output.innerHTML.trim() === '') {
+          output.innerHTML = '<p>No Herkules home matches found.</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error scraping table:', error);
+        document.getElementById('output').innerHTML = '<p>Error loading data.</p>';
+      });
+  </script>
+</body>
+</html>
